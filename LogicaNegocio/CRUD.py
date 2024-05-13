@@ -38,9 +38,14 @@ class CRUD(Singleton):
         entrada_existente = self.bd.obtener_entrada(id_entrada)
         if entrada_existente:
             self.bd.modificar_entrada(id_entrada, titulo, contenido)
-            print(f"Entrada con ID {id_entrada} actualizada correctamente.")
+            return f"Entrada con ID {id_entrada} actualizada correctamente."
         else:
-            print(f"Entrada con ID {id_entrada} no encontrada. No se pudo actualizar.")
+            return f"Entrada con ID {id_entrada} no encontrada. No se pudo actualizar."
 
     def eliminar_entrada(self, id_entrada):
-        self.bd.borrar_entrada(id_entrada)
+        entrada_existente = self.bd.obtener_entrada(id_entrada)
+        if entrada_existente:
+            self.bd.borrar_entrada(id_entrada)
+            return f"Entrada con ID {id_entrada} eliminada exitosamente."
+        else:
+            return f"Entrada con ID {id_entrada} no encontrada. No se pudo eliminar."
