@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
-from TallerFINAL.AccesoDatos.DataBase import EntradasBlogGuardadas
-from TallerFINAL.LogicaNegocio.CRUD import Singleton, CRUD
+from AccesoDatos.DataBase import EntradasBlogGuardadas
+from LogicaNegocio.CRUD import Singleton, CRUD
 
 #--------------------------PRUEBAS UNITARIAS--------------------------
 class TestSingleton(unittest.TestCase):

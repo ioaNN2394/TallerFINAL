@@ -1,4 +1,4 @@
-from TallerFINAL.AccesoDatos.DataBase import EntradasBlogGuardadas
+from AccesoDatos.DataBase import EntradasBlogGuardadas
 
 class Singleton:
     _instance = None

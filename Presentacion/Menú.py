@@ -1,6 +1,4 @@
-from tkinter import *
-from tkinter import messagebox, simpledialog
-from TallerFINAL.LogicaNegocio.CRUD import CRUD
+from LogicaNegocio.CRUD import CRUD
 
 from tkinter import *
 from tkinter import messagebox, simpledialog
