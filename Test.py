@@ -110,7 +110,7 @@ def test_end_to_end():
     pyautogui.press('enter')
     time.sleep(2)  # Esperar a que se muestre la entrada
 
-    # Eliminar entrada
+    # Eliminar entrada pruebas
     pyautogui.click(100, 300)  # Coordenadas del botón "Eliminar entrada"
     pyautogui.write('1', interval=0.1)  # ID de la entrada
     pyautogui.press('enter')
