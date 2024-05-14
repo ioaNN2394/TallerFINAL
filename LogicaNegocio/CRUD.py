@@ -1,5 +1,6 @@
 from AccesoDatos.DataBase import EntradasBlogGuardadas
 
+
 class Singleton:
     _instance = None
 
@@ -14,8 +15,8 @@ class Singleton:
             cls._instance = cls()
         return cls._instance
 
-class CRUD(Singleton):
 
+class CRUD(Singleton):
     def __init__(self):
         super().__init__()
         self.bd = EntradasBlogGuardadas()

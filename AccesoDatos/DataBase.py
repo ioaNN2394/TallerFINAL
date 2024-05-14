@@ -1,11 +1,12 @@
 class EntradasBlogGuardadas:
-
     def __init__(self):
         self.entradas = []
 
     def insertar_entrada(self, titulo, contenido):
         id_entrada = len(self.entradas) + 1
-        self.entradas.append({"id": id_entrada, "titulo": titulo, "contenido": contenido})
+        self.entradas.append(
+            {"id": id_entrada, "titulo": titulo, "contenido": contenido}
+        )
 
     def obtener_entradas(self):
         return self.entradas

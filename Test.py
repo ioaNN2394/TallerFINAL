@@ -1,18 +1,15 @@
-import unittest
 from unittest.mock import MagicMock
-from AccesoDatos.DataBase import EntradasBlogGuardadas
 from LogicaNegocio.CRUD import Singleton, CRUD
 import pyautogui
 import time
 from subprocess import Popen
-import os
 import unittest
 from AccesoDatos.DataBase import EntradasBlogGuardadas
 
-#Pruebas de Integracion
+# Pruebas de Integracion
+
 
 class TestEntradasBlogGuardadas(unittest.TestCase):
-
     def setUp(self):
         self.blog = EntradasBlogGuardadas()
 
@@ -41,12 +38,14 @@ class TestEntradasBlogGuardadas(unittest.TestCase):
         self.blog.modificar_entrada(999, "Titulo 2", "Contenido 2")
         self.blog.borrar_entrada(999)
 
-#--------------------------PRUEBAS UNITARIAS--------------------------
+
+# --------------------------PRUEBAS UNITARIAS--------------------------
 class TestSingleton(unittest.TestCase):
     def test_singleton(self):
         instance1 = Singleton.get_instance()
         instance2 = Singleton.get_instance()
         self.assertEqual(instance1, instance2)
+
 
 class TestCRUD(unittest.TestCase):
     def setUp(self):
@@ -69,25 +68,33 @@ class TestCRUD(unittest.TestCase):
 
     def test_actualizar_entrada(self):
         self.mock_db.obtener_entrada.return_value = None
-        self.assertEqual(self.crud.actualizar_entrada(1, "titulo", "contenido"), "Entrada con ID 1 no encontrada. No se pudo actualizar.")
+        self.assertEqual(
+            self.crud.actualizar_entrada(1, "titulo", "contenido"),
+            "Entrada con ID 1 no encontrada. No se pudo actualizar.",
+        )
 
     def test_eliminar_entrada(self):
         self.mock_db.obtener_entrada.return_value = None
-        self.assertEqual(self.crud.eliminar_entrada(1), "Entrada con ID 1 no encontrada. No se pudo eliminar.")
+        self.assertEqual(
+            self.crud.eliminar_entrada(1),
+            "Entrada con ID 1 no encontrada. No se pudo eliminar.",
+        )
 
-#Prueba end to end
+
+# Prueba end to end
+
 
 def test_end_to_end():
     # Iniciar la aplicación
-    p = Popen(['python', 'ruta/a/tu/archivo.py'])
+    p = Popen(["python", "ruta/a/tu/archivo.py"])
     time.sleep(5)  # Esperar a que la aplicación se inicie
 
     # Crear entrada
     pyautogui.click(100, 100)  # Coordenadas del botón "Crear entrada"
-    pyautogui.write('Titulo de prueba', interval=0.1)
-    pyautogui.press('enter')
-    pyautogui.write('Contenido de prueba', interval=0.1)
-    pyautogui.press('enter')
+    pyautogui.write("Titulo de prueba", interval=0.1)
+    pyautogui.press("enter")
+    pyautogui.write("Contenido de prueba", interval=0.1)
+    pyautogui.press("enter")
     time.sleep(2)  # Esperar a que se cree la entrada
 
     # Ver entradas
@@ -96,29 +103,29 @@ def test_end_to_end():
 
     # Actualizar entrada
     pyautogui.click(100, 200)  # Coordenadas del botón "Actualizar entrada"
-    pyautogui.write('1', interval=0.1)  # ID de la entrada
-    pyautogui.press('enter')
-    pyautogui.write('Nuevo titulo', interval=0.1)
-    pyautogui.press('enter')
-    pyautogui.write('Nuevo contenido', interval=0.1)
-    pyautogui.press('enter')
+    pyautogui.write("1", interval=0.1)  # ID de la entrada
+    pyautogui.press("enter")
+    pyautogui.write("Nuevo titulo", interval=0.1)
+    pyautogui.press("enter")
+    pyautogui.write("Nuevo contenido", interval=0.1)
+    pyautogui.press("enter")
     time.sleep(2)  # Esperar a que se actualice la entrada
 
     # Ver entrada específica
     pyautogui.click(200, 200)  # Coordenadas del botón "Ver entrada específica"
-    pyautogui.write('1', interval=0.1)  # ID de la entrada
-    pyautogui.press('enter')
+    pyautogui.write("1", interval=0.1)  # ID de la entrada
+    pyautogui.press("enter")
     time.sleep(2)  # Esperar a que se muestre la entrada
 
     # Eliminar entrada pruebas
     pyautogui.click(100, 300)  # Coordenadas del botón "Eliminar entrada"
-    pyautogui.write('1', interval=0.1)  # ID de la entrada
-    pyautogui.press('enter')
+    pyautogui.write("1", interval=0.1)  # ID de la entrada
+    pyautogui.press("enter")
     time.sleep(2)  # Esperar a que se elimine la entrada
 
     # Cerrar la aplicación
     p.terminate()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
