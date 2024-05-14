@@ -3,6 +3,7 @@ from LogicaNegocio.CRUD import CRUD
 from tkinter import *
 from tkinter import messagebox, simpledialog
 
+
 class Menu:
     def __init__(self, bd, root):
         self.bd = bd
@@ -65,8 +66,11 @@ class Menu:
         self.root.mainloop()
 
 
+
+
 if __name__ == "__main__":
     root = Tk()
     bd = CRUD.get_instance()  # Create an instance of CRUD
     menu = Menu(bd, root)  # Pass the instance of CRUD as the first argument
     menu.run()
+
