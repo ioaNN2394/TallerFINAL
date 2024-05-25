@@ -5,9 +5,12 @@ from unittest.mock import patch, MagicMock
 from Presentacion.Menú import Menu
 import time
 import concurrent.futures
-
+import pytest
 
 # --------------------------PRUEBA RENDIMIENTO-----------------------------------
+
+
+@pytest.mark.skip(reason="CI")
 class TestMenuPerformance(unittest.TestCase):
     def setUp(self):
         self.crud = CRUD.CRUD.get_instance()
@@ -178,6 +181,7 @@ class TestCRUD(unittest.TestCase):
             "Reserva a nombre de Test no encontrada o no ha sido cancelada. No se pudo eliminar.",
         )
 
+    @pytest.mark.skip(reason="CI")
     def test_flujo_completo_crear_y_ver_reserva(self):
         bd = CRUD.CRUD.get_instance()  # Usamos una instancia real de CRUD
         menu = Menu(bd)
@@ -195,6 +199,7 @@ class TestCRUD(unittest.TestCase):
         )
 
 
+@pytest.mark.skip(reason="CI")
 # ---------------------------PRUEBAS INTEGRACIÓN----------------------------------
 class TestBD(unittest.TestCase):
     def setUp(self):
