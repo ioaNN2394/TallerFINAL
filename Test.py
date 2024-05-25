@@ -1,130 +1,149 @@
-from unittest.mock import MagicMock
-from LogicaNegocio.CRUD import Singleton, CRUD
-import pyautogui
-import time
-from subprocess import Popen
+
+from LogicaNegocio import CRUD
+from AccesoDatos import MongoConnection
 import unittest
-from AccesoDatos.MongoConnection import EntradasBlogGuardadas
+from unittest.mock import patch, MagicMock
+from Presentacion.Menú import Menu
+from unittest.mock import patch
 
-# Pruebas de Integracion
+#---------------------------PRUEBAS UNITARIAS----------------------------------
 
-
-class TestEntradasBlogGuardadas(unittest.TestCase):
+class TestMenu(unittest.TestCase):
     def setUp(self):
-        self.blog = EntradasBlogGuardadas()
+        self.bd_mock = unittest.mock.MagicMock(spec=CRUD.CRUD)  # Mock de CRUD
+        self.menu = Menu(self.bd_mock)  # Instanciamos Menu con el mock
 
-    def test_insertar_y_obtener_entrada(self):
-        self.blog.insertar_entrada("Titulo 1", "Contenido 1")
-        entrada = self.blog.obtener_entrada(1)
-        self.assertEqual(entrada["titulo"], "Titulo 1")
-        self.assertEqual(entrada["contenido"], "Contenido 1")
+    # Pruebas unitarias con mocking
 
-    def test_modificar_entrada(self):
-        self.blog.insertar_entrada("Titulo 1", "Contenido 1")
-        self.blog.modificar_entrada(1, "Titulo 2", "Contenido 2")
-        entrada = self.blog.obtener_entrada(1)
-        self.assertEqual(entrada["titulo"], "Titulo 2")
-        self.assertEqual(entrada["contenido"], "Contenido 2")
-
-    def test_borrar_entrada(self):
-        self.blog.insertar_entrada("Titulo 1", "Contenido 1")
-        self.blog.borrar_entrada(1)
-        entrada = self.blog.obtener_entrada(1)
-        self.assertIsNone(entrada)
-
-    def test_manejo_de_errores(self):
-        entrada = self.blog.obtener_entrada(999)
-        self.assertIsNone(entrada)
-        self.blog.modificar_entrada(999, "Titulo 2", "Contenido 2")
-        self.blog.borrar_entrada(999)
+    def test_opcion_crear_reserva(self):
+        with patch('builtins.input', side_effect=["John Doe", "4"]):
+            self.menu.opcion_crear_reserva()
+        self.bd_mock.crear_reserva.assert_called_once_with({'Nombre_Reserva': 'John Doe', 'Cantidad_Comensales': '4'})
 
 
-# --------------------------PRUEBAS UNITARIAS--------------------------
-class TestSingleton(unittest.TestCase):
-    def test_singleton(self):
-        instance1 = Singleton.get_instance()
-        instance2 = Singleton.get_instance()
-        self.assertEqual(instance1, instance2)
+
+    def test_opcion_ver_mesas_reservadas(self):
+        self.bd_mock.leer_entradas.return_value = [
+            {'Nombre_Reserva': 'John Doe', 'Cantidad_Comensales': '4'},
+            {'Nombre_Reserva': 'Jane Smith', 'Cantidad_Comensales': '2'}
+        ]
+        with patch('builtins.print') as mock_print:
+            self.menu.opcion_ver_mesas_reservadas()
+            mock_print.assert_any_call("\nNombre de la reserva: John Doe\nCantidad de comensales: 4")
+            mock_print.assert_any_call("\nNombre de la reserva: Jane Smith\nCantidad de comensales: 2")
+
+    def test_opcion_actualizar_reserva(self):
+        with patch('builtins.input', side_effect=["John Doe", "Jane Doe", "5"]):
+            self.menu.opcion_actualizar_reserva()
+        self.bd_mock.actualizar_reserva.assert_called_once_with("John Doe", "Jane Doe", "5")
+
+    def test_opcion_eliminar_reserva(self):
+        with patch('builtins.input', return_value="John Doe"):
+            self.menu.opcion_eliminar_reserva()
+        self.bd_mock.eliminar_reserva.assert_called_once_with("John Doe")
+
+
 
 
 class TestCRUD(unittest.TestCase):
     def setUp(self):
-        self.mock_db = MagicMock(spec=EntradasBlogGuardadas)
-        CRUD._instance = None
-        self.crud = CRUD.get_instance()
-        self.crud.bd = self.mock_db
+        self.crud = CRUD.CRUD.get_instance()
+        self.crud.bd.mongo_connection.connect()
 
-    def test_crear_entrada(self):
-        self.crud.crear_Reserva("titulo", "contenido")
-        self.mock_db.insertar_entrada.assert_called_with("titulo", "contenido")
+    def test_should_create_a_reservation(self):
+        self.crud.bd.insert_reserva = MagicMock(return_value=True)
+        result = self.crud.crear_reserva({'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'})
+        self.assertEqual(result, "Reserva creada exitosamente.")
 
-    def test_leer_entradas(self):
-        self.crud.leer_entradas()
-        self.mock_db.obtener_entradas.assert_called()
+    def test_should_not_create_reservation_if_max_comensales_exceeded(self):
+        result = self.crud.crear_reserva({'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '10'})
+        self.assertEqual(result, "Error: Supera la cantidad máxima de comensales permitida (8).")
 
-    def test_leer_entrada(self):
-        self.mock_db.obtener_entrada.return_value = None
-        self.assertIsNone(self.crud.leer_Reserva(1))
+    def test_should_not_create_reservation_if_max_tables_exceeded(self):
+        self.crud.bd.contar_reservas = MagicMock(return_value=10)
+        result = self.crud.crear_reserva({'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'})
+        self.assertEqual(result, "Error: No hay mesas disponibles.")
 
-    def test_actualizar_entrada(self):
-        self.mock_db.obtener_entrada.return_value = None
-        self.assertEqual(
-            self.crud.actualizar_Reserva(1, "titulo", "contenido"),
-            "Entrada con ID 1 no encontrada. No se pudo actualizar.",
-        )
+    def test_should_read_entries(self):
+        self.crud.bd.leer_entradas = MagicMock(return_value=[{'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'}])
+        result = self.crud.leer_entradas()
+        self.assertEqual(result, [{'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'}])
 
-    def test_eliminar_entrada(self):
-        self.mock_db.obtener_entrada.return_value = None
-        self.assertEqual(
-            self.crud.eliminar_Reserva(1),
-            "Entrada con ID 1 no encontrada. No se pudo eliminar.",
-        )
+    def test_should_update_reservation(self):
+        self.crud.bd.obtener_entrada = MagicMock(return_value={'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'})
+        self.crud.bd.modificar_entrada = MagicMock(return_value=True)
+        result = self.crud.actualizar_reserva('Test', 'Test2', '5')
+        self.assertEqual(result, "Reserva a nombre de Test actualizada correctamente.")
+
+    def test_should_not_update_reservation_if_not_found(self):
+        self.crud.bd.obtener_entrada = MagicMock(return_value=None)
+        result = self.crud.actualizar_reserva('Test', 'Test2', '5')
+        self.assertEqual(result, "Reserva a nombre de Test no encontrada. No se pudo actualizar.")
+
+    def test_should_delete_reservation(self):
+        self.crud.bd.obtener_entrada = MagicMock(return_value={'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4', 'Cancelada': True})
+        self.crud.bd.borrar_entrada = MagicMock(return_value=True)
+        result = self.crud.eliminar_reserva('Test')
+        self.assertEqual(result, "Reserva a nombre de Test eliminada exitosamente.")
+
+    def test_should_not_delete_reservation_if_not_found_or_not_cancelled(self):
+        self.crud.bd.obtener_entrada = MagicMock(return_value=None)
+        result = self.crud.eliminar_reserva('Test')
+        self.assertEqual(result, "Reserva a nombre de Test no encontrada o no ha sido cancelada. No se pudo eliminar.")
+
+    def test_flujo_completo_crear_y_ver_reserva(self):
+        bd = CRUD.CRUD.get_instance()  # Usamos una instancia real de CRUD
+        menu = Menu(bd)
+
+        with patch('builtins.input', side_effect=["3", "John Doe", "4", "1", "5", "s"]):
+            menu.menu()
+
+        reservas = bd.leer_entradas()
+        # Asegurarse de que el diccionario existe en la lista, sin importar el valor de _id
+        self.assertTrue(any(
+            r["Nombre_Reserva"] == "John Doe" and r["Cantidad_Comensales"] == "4"
+            for r in reservas
+        ))
+
+#---------------------------PRUEBAS INTEGRACIÓN----------------------------------
+class TestBD(unittest.TestCase):
+    def setUp(self):
+        self.crud = CRUD.CRUD.get_instance()
+        self.mongo_connection = MongoConnection.MongoConnection()
+        self.mongo_connection.connect()
+        self.crud.bd.db = self.mongo_connection.client['Restaurante']
+        self.crud.bd.collection = self.crud.bd.db['Mesas']
+
+    def test_should_create_a_reservation_in_database(self):
+        reserva_info = {'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'}
+        self.crud.crear_reserva(reserva_info)
+        reserva_in_db = self.crud.bd.leer_reserva('Test')
+        self.assertEqual(reserva_in_db['Nombre_Reserva'], 'Test')
+        self.assertEqual(reserva_in_db['Cantidad_Comensales'], '4')
+
+    def test_should_update_reservation_in_database(self):
+        reserva_info = {'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4'}
+        self.crud.crear_reserva(reserva_info)
+        self.crud.actualizar_reserva('Test', 'Test2', '5')
+        reserva_in_db = self.crud.bd.leer_reserva('Test2')
+        self.assertEqual(reserva_in_db['Nombre_Reserva'], 'Test2')
+        self.assertEqual(reserva_in_db['Cantidad_Comensales'], '5')
+
+    def test_should_delete_reservation_in_database(self):
+        reserva_info = {'Nombre_Reserva': 'Test', 'Cantidad_Comensales': '4', 'Cancelada': True}
+        self.crud.crear_reserva(reserva_info)
+        self.crud.eliminar_reserva('Test')
+        reserva_in_db = self.crud.bd.leer_reserva('Test')
+        self.assertIsNone(reserva_in_db)
+
+    def tearDown(self):
+        self.crud.bd.collection.delete_many({})
 
 
-# Prueba end to end
 
 
-def test_end_to_end():
-    # Iniciar la aplicación
-    p = Popen(["python", "ruta/a/tu/archivo.py"])
-    time.sleep(5)  # Esperar a que la aplicación se inicie
 
-    # Crear entrada
-    pyautogui.click(100, 100)  # Coordenadas del botón "Crear entrada"
-    pyautogui.write("Titulo de prueba", interval=0.1)
-    pyautogui.press("enter")
-    pyautogui.write("Contenido de prueba", interval=0.1)
-    pyautogui.press("enter")
-    time.sleep(2)  # Esperar a que se cree la entrada
 
-    # Ver entradas
-    pyautogui.click(200, 100)  # Coordenadas del botón "Ver entradas"
-    time.sleep(2)  # Esperar a que se muestren las entradas
-
-    # Actualizar entrada
-    pyautogui.click(100, 200)  # Coordenadas del botón "Actualizar entrada"
-    pyautogui.write("1", interval=0.1)  # ID de la entrada
-    pyautogui.press("enter")
-    pyautogui.write("Nuevo titulo", interval=0.1)
-    pyautogui.press("enter")
-    pyautogui.write("Nuevo contenido", interval=0.1)
-    pyautogui.press("enter")
-    time.sleep(2)  # Esperar a que se actualice la entrada
-
-    # Ver entrada específica
-    pyautogui.click(200, 200)  # Coordenadas del botón "Ver entrada específica"
-    pyautogui.write("1", interval=0.1)  # ID de la entrada
-    pyautogui.press("enter")
-    time.sleep(2)  # Esperar a que se muestre la entrada
-
-    # Eliminar entrada pruebas
-    pyautogui.click(100, 300)  # Coordenadas del botón "Eliminar entrada"
-    pyautogui.write("1", interval=0.1)  # ID de la entrada
-    pyautogui.press("enter")
-    time.sleep(2)  # Esperar a que se elimine la entrada
-
-    # Cerrar la aplicación
-    p.terminate()
 
 
 if __name__ == "__main__":
