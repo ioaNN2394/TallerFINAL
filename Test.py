@@ -4,7 +4,7 @@ import pyautogui
 import time
 from subprocess import Popen
 import unittest
-from AccesoDatos.DataBase import EntradasBlogGuardadas
+from AccesoDatos.MongoConnection import EntradasBlogGuardadas
 
 # Pruebas de Integracion
 
@@ -55,7 +55,7 @@ class TestCRUD(unittest.TestCase):
         self.crud.bd = self.mock_db
 
     def test_crear_entrada(self):
-        self.crud.crear_entrada("titulo", "contenido")
+        self.crud.crear_Reserva("titulo", "contenido")
         self.mock_db.insertar_entrada.assert_called_with("titulo", "contenido")
 
     def test_leer_entradas(self):
@@ -64,19 +64,19 @@ class TestCRUD(unittest.TestCase):
 
     def test_leer_entrada(self):
         self.mock_db.obtener_entrada.return_value = None
-        self.assertIsNone(self.crud.leer_entrada(1))
+        self.assertIsNone(self.crud.leer_Reserva(1))
 
     def test_actualizar_entrada(self):
         self.mock_db.obtener_entrada.return_value = None
         self.assertEqual(
-            self.crud.actualizar_entrada(1, "titulo", "contenido"),
+            self.crud.actualizar_Reserva(1, "titulo", "contenido"),
             "Entrada con ID 1 no encontrada. No se pudo actualizar.",
         )
 
     def test_eliminar_entrada(self):
         self.mock_db.obtener_entrada.return_value = None
         self.assertEqual(
-            self.crud.eliminar_entrada(1),
+            self.crud.eliminar_Reserva(1),
             "Entrada con ID 1 no encontrada. No se pudo eliminar.",
         )
 
