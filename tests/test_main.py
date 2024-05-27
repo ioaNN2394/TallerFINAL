@@ -2,69 +2,8 @@ from LogicaNegocio import CRUD
 from AccesoDatos import MongoConnection
 import unittest
 from unittest.mock import patch, MagicMock
-from Presentacion.Menú import Menu
-import time
-import concurrent.futures
+from Presentacion.Menu import Menu
 import pytest
-
-# --------------------------PRUEBA RENDIMIENTO-----------------------------------
-
-
-@pytest.mark.skip(reason="CI")
-class TestMenuPerformance(unittest.TestCase):
-    def setUp(self):
-        self.crud = CRUD.CRUD.get_instance()
-        self.crud.bd.connect()  # Aseguramos que la conexión se establece
-        self.menu = Menu(self.crud)
-        self.crud.bd.collection.delete_many({})
-
-    def tearDown(self):
-        self.crud.bd.collection.delete_many({})
-
-    def simulate_input(self, inputs):
-        inputs = iter(inputs)
-        return lambda _: next(inputs)
-
-    def user_interaction(self, user_id):
-        # Simula una serie de interacciones de un usuario
-        inputs = [
-            "3",
-            f"User{user_id}",
-            "4",  # Crear reserva
-            "2",
-            f"User{user_id}",
-            f"UpdatedUser{user_id}",
-            "5",  # Actualizar reserva
-            "1",  # Ver mesas reservadas
-            "4",
-            f"UpdatedUser{user_id}",  # Eliminar reserva
-            "5",
-            "s",  # Salir
-        ]
-        input_fn = self.simulate_input(inputs)
-
-        with patch("builtins.input", input_fn), patch("builtins.print"):
-            self.menu.menu()
-
-    def test_performance(self):
-        num_users = 1000
-        start_time = time.perf_counter()
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_users) as executor:
-            futures = [
-                executor.submit(self.user_interaction, user_id)
-                for user_id in range(num_users)
-            ]
-
-            for future in concurrent.futures.as_completed(futures):
-                future.result()  # Esperar a que todas las tareas se completen
-
-        end_time = time.perf_counter()
-        duration = end_time - start_time
-        print(
-            f"Duración de la prueba de rendimiento con {num_users} usuarios: {duration:.4f} segundos"
-        )
-
 
 # ---------------------------PRUEBAS UNITARIAS----------------------------------
 
