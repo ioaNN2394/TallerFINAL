@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/ioaNN2394/TallerFINAL/graph/badge.svg?token=CIDWXAIK7K)](https://codecov.io/gh/ioaNN2394/TallerFINAL)
+
 # TallerFINAL
 
 # Crear un proyecto (el que ustedes quieran y la tecnología que quieran) y resolver los siguientes temas:
