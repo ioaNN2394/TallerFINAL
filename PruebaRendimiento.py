@@ -1,40 +1,50 @@
 import time
-import unittest
 
-from AccesoDatos.MongoConnection import MongoConnection
-from LogicaNegocio.CRUD import CRUD
+from AccesoDatos.TablesDataBase import TableModel
+
+import threading
 
 
-class TestPerformance(unittest.TestCase):
-    def setUp(self):
-        self.crud = CRUD.get_instance()
-        self.mongo_connection = MongoConnection()
-        self.mongo_connection.connect()
-        self.crud.bd.db = self.mongo_connection.client["Restaurante"]
-        self.crud.bd.collection = self.crud.bd.db["Mesas"]
+def realizar_operaciones(table_model, request_counter):
+    start_time = time.perf_counter()
+    table_model.insert_reserva({"Nombre_Reserva": "Prueba", "Cantidad_Comensales": 4})
+    end_time = time.perf_counter()
+    print(f"Tiempo de creación: {end_time - start_time} segundos")
+    request_counter[0] += 1
 
-    def test_database_operations_performance(self):
-        reserva_info = {"Nombre_Reserva": "Test", "Cantidad_Comensales": "4"}
+    start_time = time.perf_counter()
+    table_model.leer_entradas()
+    end_time = time.perf_counter()
+    print(f"Tiempo de lectura: {end_time - start_time} segundos")
+    request_counter[0] += 1
 
-        start_time = time.time()
-        self.crud.crear_reserva(reserva_info)
-        create_time = time.time() - start_time
-        print(f"Tiempo de creación: {create_time} segundos")
+    start_time = time.perf_counter()
+    table_model.modificar_entrada("Prueba", "PruebaModificada", 5)
+    end_time = time.perf_counter()
+    print(f"Tiempo de actualización: {end_time - start_time} segundos")
+    request_counter[0] += 1
 
-        start_time = time.time()
-        self.crud.leer_reserva("Test")
-        read_time = time.time() - start_time
-        print(f"Tiempo de lectura: {read_time} segundos")
 
-        start_time = time.time()
-        self.crud.actualizar_reserva("Test", "Test2", "5")
-        update_time = time.time() - start_time
-        print(f"Tiempo de actualización: {update_time} segundos")
+if __name__ == "__main__":
+    table_model = TableModel()
+    print("Conectado a MongoDB")
 
-        start_time = time.time()
-        self.crud.eliminar_reserva("Test2")
-        delete_time = time.time() - start_time
-        print(f"Tiempo de eliminación: {delete_time} segundos")
+    request_counter = [
+        0
+    ]  # Usamos una lista para que sea mutable y pueda ser actualizada dentro de la función
+    start_time_global = time.perf_counter()
 
-    def tearDown(self):
-        self.crud.bd.collection.delete_many({})
+    threads = []
+    for _ in range(1000):  # Crear 1000 hilos
+        thread = threading.Thread(
+            target=realizar_operaciones, args=(table_model, request_counter)
+        )
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:  # Esperar a que todos los hilos terminen
+        thread.join()
+
+    end_time_global = time.perf_counter()
+    print(f"Tiempo total de la prueba: {end_time_global - start_time_global} segundos")
+    print(f"Cantidad total de solicitudes realizadas: {request_counter[0]}")
